@@ -67,4 +67,4 @@ class PostgresIdentityKeyStore(IdentityKeyStore):
         result = c.fetchone()
         if not result:
             return True
-        return result[0] == identityKey.getPublicKey().serialize()
+        return bytes(result[0]) == identityKey.getPublicKey().serialize()
