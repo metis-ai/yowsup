@@ -1,5 +1,8 @@
 from axolotl.state.sessionstore import SessionStore
 from axolotl.state.sessionrecord import SessionRecord
+import sqlite3
+
+
 class LiteSessionStore(SessionStore):
     def __init__(self, dbConn):
         """
@@ -13,7 +16,11 @@ class LiteSessionStore(SessionStore):
     def loadSession(self, recipientId, deviceId):
         q = "SELECT record FROM sessions WHERE recipient_id = ? AND device_id = ?"
         c = self.dbConn.cursor()
-        c.execute(q, (recipientId, deviceId))
+        try:
+            c.execute(q, (recipientId, deviceId))
+        except sqlite3.InterfaceError as e:
+            print(type(recipientId), recipientId)
+            raise e
         result = c.fetchone()
 
         if result:
