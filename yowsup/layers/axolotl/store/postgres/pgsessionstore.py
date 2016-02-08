@@ -3,18 +3,19 @@ from axolotl.state.sessionrecord import SessionRecord
 
 
 class PostgresSessionStore(SessionStore):
-    def __init__(self, dbConn):
+    def __init__(self, dbConn, table_prefix=''):
         """
         :type dbConn: Connection
         """
         self.dbConn = dbConn
+        self.table_name = '{}_sessions'.format(table_prefix)
         c = self.dbConn.cursor()
-        c.execute("CREATE TABLE IF NOT EXISTS sessions (_id serial PRIMARY KEY,"
-                    "recipient_id BIGINT UNIQUE, device_id BIGINT, record BYTEA, timestamp BIGINT);")
+        c.execute("CREATE TABLE IF NOT EXISTS {} (_id serial PRIMARY KEY,"
+                    "recipient_id BIGINT UNIQUE, device_id BIGINT, record BYTEA, timestamp BIGINT);".format(self.table_name))
 
 
     def loadSession(self, recipientId, deviceId):
-        q = "SELECT record FROM sessions WHERE recipient_id = %s AND device_id = %s"
+        q = "SELECT record FROM {} WHERE recipient_id = %s AND device_id = %s".format(self.table_name)
         c = self.dbConn.cursor()
         c.execute(q, (recipientId, deviceId))
         result = c.fetchone()
@@ -25,7 +26,7 @@ class PostgresSessionStore(SessionStore):
             return SessionRecord()
 
     def getSubDeviceSessions(self, recipientId):
-        q = "SELECT device_id from sessions WHERE recipient_id = %s"
+        q = "SELECT device_id from {} WHERE recipient_id = %s".format(self.table_name)
         c = self.dbConn.cursor()
         c.execute(q, (recipientId,))
         result = c.fetchall()
@@ -36,13 +37,13 @@ class PostgresSessionStore(SessionStore):
     def storeSession(self, recipientId, deviceId, sessionRecord):
         self.deleteSession(recipientId, deviceId)
 
-        q = "INSERT INTO sessions(recipient_id, device_id, record) VALUES(%s,%s,%s)"
+        q = "INSERT INTO {}(recipient_id, device_id, record) VALUES(%s,%s,%s)".format(self.table_name)
         c = self.dbConn.cursor()
         c.execute(q, (recipientId, deviceId, sessionRecord.serialize()))
         self.dbConn.commit()
 
     def containsSession(self, recipientId, deviceId):
-        q = "SELECT record FROM sessions WHERE recipient_id = %s AND device_id = %s"
+        q = "SELECT record FROM {} WHERE recipient_id = %s AND device_id = %s".format(self.table_name)
         c = self.dbConn.cursor()
         c.execute(q, (recipientId, deviceId))
         result = c.fetchone()
@@ -50,11 +51,11 @@ class PostgresSessionStore(SessionStore):
         return result is not None
 
     def deleteSession(self, recipientId, deviceId):
-        q = "DELETE FROM sessions WHERE recipient_id = %s AND device_id = %s"
+        q = "DELETE FROM {} WHERE recipient_id = %s AND device_id = %s".format(self.table_name)
         self.dbConn.cursor().execute(q, (recipientId, deviceId))
         self.dbConn.commit()
 
     def deleteAllSessions(self, recipientId):
-        q = "DELETE FROM sessions WHERE recipient_id = %s"
+        q = "DELETE FROM {} WHERE recipient_id = %s".format(self.table_name)
         self.dbConn.cursor().execute(q, (recipientId,))
         self.dbConn.commit()

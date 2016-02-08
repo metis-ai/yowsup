@@ -7,12 +7,12 @@ import psycopg2
 
 
 class PostgresAxolotlStore(AxolotlStore):
-    def __init__(self, db):
+    def __init__(self, db, table_prefix=''):
         conn = psycopg2.connect(db)
-        self.identityKeyStore = PostgresIdentityKeyStore(conn)
-        self.preKeyStore =  PostgresPreKeyStore(conn)
-        self.signedPreKeyStore = PostgresSignedPreKeyStore(conn)
-        self.sessionStore = PostgresSessionStore(conn)
+        self.identityKeyStore = PostgresIdentityKeyStore(conn, table_prefix)
+        self.preKeyStore =  PostgresPreKeyStore(conn, table_prefix)
+        self.signedPreKeyStore = PostgresSignedPreKeyStore(conn, table_prefix)
+        self.sessionStore = PostgresSessionStore(conn, table_prefix)
 
     def getIdentityKeyPair(self):
         return self.identityKeyStore.getIdentityKeyPair()
