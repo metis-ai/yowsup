@@ -71,17 +71,14 @@ class YowAxolotlLayer(YowProtocolLayer):
     @property
     def store(self):
         if self._store is None:
+            username = self.getProp(
+                YowAuthenticationProtocolLayer.PROP_CREDENTIALS)[0]
             store_url = os.environ.get('YOWSUP_DATABASE_URL')
             if store_url:
-                self.store = get_store_from_url(store_url)
+                self.store = get_store_from_url(store_url, username)
             else:
                 self.store = LiteAxolotlStore(
-                    StorageTools.constructPath(
-                        self.getProp(
-                            YowAuthenticationProtocolLayer.PROP_CREDENTIALS)[0],
-                        self.__class__._DB
-                    )
-                )
+                    StorageTools.constructPath(username, self._DB))
             self.state = self.__class__._STATE_HASKEYS if  self.store.getLocalRegistrationId() is not None \
                 else self.__class__._STATE_INIT
 
