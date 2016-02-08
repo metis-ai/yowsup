@@ -16,7 +16,7 @@ urlparse.uses_netloc.append('pgsql')
 urlparse.uses_netloc.append('sqlite')
 
 
-def get_store_from_url(url):
+def get_store_from_url(url, username=''):
     url = urlparse.urlparse(url)
 
     # Split query strings from path.
@@ -46,7 +46,8 @@ def get_store_from_url(url):
     }
     if url.scheme in ['postgres', 'postgresql', 'pgsql']:
         store = PostgresAxolotlStore('dbname={dbname} user={user} password='
-            '{password} host={host} port={port}'.format(**config))
+            '{password} host={host} port={port}'.format(**config),
+            table_prefix='yowsup_{}'.format(username))
     elif url.scheme == 'sqlite':
         store = LiteAxolotlStore(config['dbname'])
 
