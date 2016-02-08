@@ -3,11 +3,11 @@ from .pgidentitykeystore import PostgresIdentityKeyStore
 from .pgprekeystore import PostgresPreKeyStore
 from .pgsessionstore import PostgresSessionStore
 from .pgsignedprekeystore import PostgresSignedPreKeyStore
-import psycopg2
 
 
 class PostgresAxolotlStore(AxolotlStore):
     def __init__(self, db, table_prefix=''):
+        import psycopg2
         conn = psycopg2.connect(db)
         self.identityKeyStore = PostgresIdentityKeyStore(conn, table_prefix)
         self.preKeyStore =  PostgresPreKeyStore(conn, table_prefix)
