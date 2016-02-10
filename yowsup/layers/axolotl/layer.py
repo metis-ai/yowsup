@@ -1,6 +1,7 @@
 from yowsup.layers import YowProtocolLayer, YowLayerEvent, EventCallback
 from .protocolentities import SetKeysIqProtocolEntity
 from axolotl.util.keyhelper import KeyHelper
+from .store import get_store_from_url
 from .store.sqlite.liteaxolotlstore import LiteAxolotlStore
 from axolotl.sessionbuilder import SessionBuilder
 from yowsup.layers.protocol_messages.protocolentities.message import MessageProtocolEntity
@@ -26,6 +27,7 @@ from axolotl.untrustedidentityexception import UntrustedIdentityException
 from .protocolentities.receipt_outgoing_retry import RetryOutgoingReceiptProtocolEntity
 import binascii
 import sys
+import os
 
 import logging
 logger = logging.getLogger(__name__)
@@ -52,13 +54,14 @@ class YowAxolotlLayer(YowProtocolLayer):
     @property
     def store(self):
         if self._store is None:
-            self.store = LiteAxolotlStore(
-                StorageTools.constructPath(
-                    self.getProp(
-                        YowAuthenticationProtocolLayer.PROP_CREDENTIALS)[0],
-                    self.__class__._DB
-                )
-            )
+            username = self.getProp(
+                YowAuthenticationProtocolLayer.PROP_CREDENTIALS)[0]
+            store_url = os.environ.get('YOWSUP_DATABASE_URL')
+            if store_url:
+                self.store = get_store_from_url(store_url, username)
+            else:
+                self.store = LiteAxolotlStore(
+                    StorageTools.constructPath(username, self._DB))
             self.state = self.__class__._STATE_HASKEYS if  self.store.getLocalRegistrationId() is not None \
                 else self.__class__._STATE_INIT
 
