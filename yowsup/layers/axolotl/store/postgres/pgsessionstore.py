@@ -11,7 +11,8 @@ class PostgresSessionStore(SessionStore):
         self.table_name = '{}_sessions'.format(table_prefix)
         c = self.dbConn.cursor()
         c.execute("CREATE TABLE IF NOT EXISTS {} (_id serial PRIMARY KEY,"
-                    "recipient_id BIGINT UNIQUE, device_id BIGINT, record BYTEA, timestamp BIGINT);".format(self.table_name))
+                    "recipient_id BIGINT, device_id BIGINT, record BYTEA, timestamp BIGINT);".format(self.table_name))
+        # TODO: add unique for recipient_id+device_id
 
 
     def loadSession(self, recipientId, deviceId):
