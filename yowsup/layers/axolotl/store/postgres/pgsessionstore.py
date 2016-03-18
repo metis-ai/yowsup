@@ -11,11 +11,11 @@ class PostgresSessionStore(SessionStore):
         self.table_name = '{}_sessions'.format(table_prefix)
         c = self.dbConn.cursor()
         c.execute("CREATE TABLE IF NOT EXISTS {} (_id serial PRIMARY KEY,"
-                    "recipient_id BIGINT UNIQUE, device_id BIGINT, record BYTEA, timestamp BIGINT);".format(self.table_name))
+                    "recipient_id TEXT, device_id BIGINT, record BYTEA, timestamp BIGINT);".format(self.table_name))
 
 
     def loadSession(self, recipientId, deviceId):
-        q = "SELECT record FROM {} WHERE recipient_id = %s AND device_id = %s".format(self.table_name)
+        q = "SELECT record FROM {} WHERE recipient_id = '%s' AND device_id = %s".format(self.table_name)
         c = self.dbConn.cursor()
         c.execute(q, (recipientId, deviceId))
         result = c.fetchone()
@@ -37,7 +37,7 @@ class PostgresSessionStore(SessionStore):
     def storeSession(self, recipientId, deviceId, sessionRecord):
         self.deleteSession(recipientId, deviceId)
 
-        q = "INSERT INTO {}(recipient_id, device_id, record) VALUES(%s,%s,%s)".format(self.table_name)
+        q = "INSERT INTO {}(recipient_id, device_id, record) VALUES('%s',%s,%s)".format(self.table_name)
         c = self.dbConn.cursor()
         c.execute(q, (recipientId, deviceId, sessionRecord.serialize()))
         self.dbConn.commit()
