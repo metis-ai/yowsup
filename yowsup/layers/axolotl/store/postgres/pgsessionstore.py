@@ -16,7 +16,7 @@ class PostgresSessionStore(SessionStore):
 
 
     def loadSession(self, recipientId, deviceId):
-        q = "SELECT record FROM {} WHERE recipient_id = '%s' AND device_id = %s".format(self.table_name)
+        q = "SELECT record FROM {} WHERE recipient_id = %s AND device_id = %s".format(self.table_name)
         c = self.dbConn.cursor()
         c.execute(q, (recipientId, deviceId))
         result = c.fetchone()
@@ -38,7 +38,7 @@ class PostgresSessionStore(SessionStore):
     def storeSession(self, recipientId, deviceId, sessionRecord):
         self.deleteSession(recipientId, deviceId)
 
-        q = "INSERT INTO {}(recipient_id, device_id, record) VALUES('%s',%s,%s)".format(self.table_name)
+        q = "INSERT INTO {}(recipient_id, device_id, record) VALUES(%s,%s,%s)".format(self.table_name)
         c = self.dbConn.cursor()
         c.execute(q, (recipientId, deviceId, sessionRecord.serialize()))
         self.dbConn.commit()
