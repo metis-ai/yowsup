@@ -50,18 +50,18 @@ class PostgresIdentityKeyStore(IdentityKeyStore):
         self.dbConn.commit()
 
     def saveIdentity(self, recipientId, identityKey):
-        q = "DELETE FROM {} WHERE recipient_id='%s'".format(self.table_name)
+        q = "DELETE FROM {} WHERE recipient_id=%s".format(self.table_name)
         self.dbConn.cursor().execute(q, (recipientId,))
         self.dbConn.commit()
 
 
-        q = "INSERT INTO {} (recipient_id, public_key) VALUES('%s', %s)".format(self.table_name)
+        q = "INSERT INTO {} (recipient_id, public_key) VALUES(%s, %s)".format(self.table_name)
         c = self.dbConn.cursor()
         c.execute(q, (recipientId, identityKey.getPublicKey().serialize()))
         self.dbConn.commit()
 
     def isTrustedIdentity(self, recipientId, identityKey):
-        q = "SELECT public_key from {} WHERE recipient_id = '%s'".format(self.table_name)
+        q = "SELECT public_key from {} WHERE recipient_id = %s".format(self.table_name)
         c = self.dbConn.cursor()
         c.execute(q, (recipientId,))
         result = c.fetchone()
