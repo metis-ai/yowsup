@@ -303,6 +303,8 @@ class YowAxolotlLayer(YowProtocolLayer):
         return value, consumedBytes
 
     def unpadV2Plaintext(self, v2plaintext):
+        if type(v2plaintext) == bytes:
+            v2plaintext = v2plaintext.decode()
         end = -ord(v2plaintext[-1]) # length of the left padding
         length,consumed = self.decodeInt7bit(v2plaintext[1:])
         return v2plaintext[1+consumed:end]
