@@ -292,9 +292,9 @@ class YowAxolotlLayer(YowProtocolLayer):
 
     def unpadV2Plaintext(self, v2plaintext):
         if len(v2plaintext) < 128:
-            return v2plaintext[2:-1]
+            return v2plaintext[2:]
         else: # < 128 * 128
-            return v2plaintext[3: -1]
+            return v2plaintext[3:]
 
     ####
 
