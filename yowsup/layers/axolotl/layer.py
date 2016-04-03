@@ -25,6 +25,7 @@ from axolotl.invalidkeyidexception import InvalidKeyIdException
 from axolotl.nosessionexception import NoSessionException
 from axolotl.untrustedidentityexception import UntrustedIdentityException
 from .protocolentities.receipt_outgoing_retry import RetryOutgoingReceiptProtocolEntity
+from .invalidmessagesessionexception import InvalidMessageSessionException
 from yowsup.common import YowConstants
 import binascii
 import sys
@@ -239,6 +240,9 @@ class YowAxolotlLayer(YowProtocolLayer):
             retry = RetryOutgoingReceiptProtocolEntity.fromMesageNode(node)
             retry.setRegData(self.store.getLocalRegistrationId())
             self.toLower(retry.toProtocolTreeNode())
+            # We still notify the outer application
+            raise InvalidMessageSessionException(e, node["from"], node["notify"])
+            # sys.exit(1))
         except InvalidKeyIdException as e:
             logger.error(e)
             retry = RetryOutgoingReceiptProtocolEntity.fromMesageNode(node)
