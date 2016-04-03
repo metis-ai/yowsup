@@ -26,11 +26,17 @@ from axolotl.duplicatemessagexception import DuplicateMessageException
 from axolotl.invalidkeyidexception import InvalidKeyIdException
 from axolotl.nosessionexception import NoSessionException
 from axolotl.untrustedidentityexception import UntrustedIdentityException
+#<<<<<<< HEAD
 from axolotl.axolotladdress import AxolotlAddress
 from axolotl.groups.senderkeyname import SenderKeyName
 from axolotl.groups.groupsessionbuilder import GroupSessionBuilder
 from axolotl.protocol.senderkeydistributionmessage import SenderKeyDistributionMessage
 
+#=======
+from .protocolentities.receipt_outgoing_retry import RetryOutgoingReceiptProtocolEntity
+from .invalidmessagesessionexception import InvalidMessageSessionException
+from yowsup.common import YowConstants
+#>>>>>>> 97cb239... Added exception for invalid session exception with info about sender
 import binascii
 import copy
 import sys
@@ -230,12 +236,30 @@ class YowAxolotlLayer(YowProtocolLayer):
                 self.handlePreKeyWhisperMessage(node)
             if encMessageProtocolEntity.getEnc(EncProtocolEntity.TYPE_MSG):
                 self.handleWhisperMessage(node)
+#<<<<<<< HEAD
             if encMessageProtocolEntity.getEnc(EncProtocolEntity.TYPE_SKMSG):
                 self.handleSenderKeyMessage(node)
 
             self.retryDel(node)
             self.recoverKeyClean(senderJid)
 
+#=======
+        except InvalidMessageException as e:
+            # logger.error("Invalid message from %s!! Your axololtl database data might be inconsistent with WhatsApp, or with what that contact has" % node["from"])
+            # sys.exit(1)
+            logger.error(e)
+            retry = RetryOutgoingReceiptProtocolEntity.fromMesageNode(node)
+            retry.setRegData(self.store.getLocalRegistrationId())
+            self.toLower(retry.toProtocolTreeNode())
+            # We still notify the outer application
+            raise InvalidMessageSessionException(e, node["from"], node["notify"])
+            # sys.exit(1))
+        except InvalidKeyIdException as e:
+            logger.error(e)
+            retry = RetryOutgoingReceiptProtocolEntity.fromMesageNode(node)
+            retry.setRegData(self.store.getLocalRegistrationId())
+            self.toLower(retry.toProtocolTreeNode())
+#>>>>>>> 97cb239... Added exception for invalid session exception with info about sender
         except NoSessionException as e:
             logger.error(e)
             entity = GetKeysIqProtocolEntity([senderJid])
