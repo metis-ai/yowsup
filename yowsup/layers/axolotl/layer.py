@@ -297,7 +297,16 @@ class YowAxolotlLayer(YowProtocolLayer):
 
         whisperMessage = WhisperMessage(serialized=encMessageProtocolEntity.getEncData())
         sessionCipher = self.getSessionCipher(encMessageProtocolEntity.getFrom(False))
-        plaintext = sessionCipher.decryptMsg(whisperMessage)
+        try:
+            plaintext = sessionCipher.decryptMsg(whisperMessage)
+        except:
+            logger.error("Unexpected exception calling "
+                "sessionCipher.decryptPkmsg(): whisperMessage=%s",
+                whisperMessage, exc_info=True)
+            # Send ACK as we read it
+            self.toLower(OutgoingReceiptProtocolEntity(
+                    node["id"], node["from"], True).toProtocolTreeNode())
+            return
 
         if encMessageProtocolEntity.getVersion() == 2:
             plaintext = self.unpadV2Plaintext(plaintext)
