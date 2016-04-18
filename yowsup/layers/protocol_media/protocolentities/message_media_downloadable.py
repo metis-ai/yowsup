@@ -2,6 +2,19 @@ from .message_media import MediaMessageProtocolEntity
 from yowsup.common.tools import WATools
 from yowsup.common.tools import MimeTools
 import os
+from Crypto.Cipher import AES
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib2 import urlopen
+from axolotl.kdf.hkdfv3 import HKDFv3
+from axolotl.util.byteutil import ByteUtil
+import binascii
+import base64
+import logging
+logger = logging.getLogger(__name__)
+
+
 class DownloadableMediaMessageProtocolEntity(MediaMessageProtocolEntity):
     '''
     <message t="{{TIME_STAMP}}" from="{{CONTACT_JID}}"
@@ -36,6 +49,26 @@ class DownloadableMediaMessageProtocolEntity(MediaMessageProtocolEntity):
         out += "File name: %s\n" % self.fileName
         return out
 
+    def decrypt(self, encimg, refkey):
+        derivative = HKDFv3().deriveSecrets(refkey, binascii.unhexlify(self.cryptKeys), 112)
+        parts = ByteUtil.split(derivative, 16, 32)
+        iv = parts[0]
+        cipherKey = parts[1]
+        e_img = encimg[:-10]
+        AES.key_size=128
+        cr_obj = AES.new(key=cipherKey,mode=AES.MODE_CBC,IV=iv)
+        return cr_obj.decrypt(e_img)
+
+    def isEncrypted(self):
+        return self.cryptKeys and self.mediaKey
+
+    def getMediaContent(self):
+        logger.debug('Getting media data from {}'.format(self.url))
+        data = urlopen(str(self.url)).read()
+        if self.isEncrypted():
+            data = self.decrypt(data, self.mediaKey)
+        return bytearray(data)
+
     def getMediaSize(self):
         return self.size
 
@@ -48,7 +81,12 @@ class DownloadableMediaMessageProtocolEntity(MediaMessageProtocolEntity):
     def setDownloadableMediaProps(self, mimeType, fileHash, url, ip, size, fileName, mediaKey):
         self.mimeType   = mimeType
         self.fileHash   = fileHash
-        self.url        = url
+        # The following is to handle incoming and outgoing images
+        # with python 3, since the url for the latter is a str
+        if isinstance(url, str):
+            self.url = url
+        else:
+            self.url = url.decode('latin-1')
         self.ip         = ip
         self.size       = int(size)
         self.fileName   = fileName
