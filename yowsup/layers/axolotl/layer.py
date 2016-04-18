@@ -313,6 +313,9 @@ class YowAxolotlLayer(YowProtocolLayer):
 
         if enc.getVersion() == 2:
             padding = ord(plaintext[-1]) & 0xFF
+            logger.debug(
+                'Handleing whisper message (with padding): {}'.format(
+                    plaintext))
             self.parseAndHandleMessageProto(encMessageProtocolEntity, plaintext[:-padding])
         else:
             self.handleConversationMessage(encMessageProtocolEntity.toProtocolTreeNode(), plaintext)
@@ -336,14 +339,22 @@ class YowAxolotlLayer(YowProtocolLayer):
     def parseAndHandleMessageProto(self, encMessageProtocolEntity, serializedData):
         m = Message()
         try:
-            m.ParseFromString(serializedData)
-        except:
-            print("DUMP:")
+            logger.debug('Handleing message (without padding): {}'.format(
+                    serializedData))
+            if sys.version_info >= (3, 0):
+                m.ParseFromString(bytes(serializedData, 'latin-1'))
+            else:
+                m.ParseFromString(serializedData)
+                
+        except Exception as e:
+            #print("DUMP:")
             #with open("/tmp/protobuf.bin", "wb") as f:
             #    f.write(serializedData)
-            print(serializedData)
-            print([s for s in serializedData])
-            print([ord(s) for s in serializedData])
+            #print(serializedData)
+            #print([s for s in serializedData])
+            #print([ord(s) for s in serializedData])
+            logger.error(
+                'Exception in serialized data parsing: {}'.format(e))
             raise
         if not m or not serializedData:
             raise ValueError("Empty message")
@@ -369,7 +380,6 @@ class YowAxolotlLayer(YowProtocolLayer):
         elif m.HasField("audio_message"):
             self.handleAudioMessage(node, m.audio_message)
         else:
-            print(m)
             raise ValueError("Unhandled")
 
     def handleSenderKeyDistributionMessage(self, senderKeyDistributionMessage, axolotlAddress):
@@ -535,7 +545,10 @@ class YowAxolotlLayer(YowProtocolLayer):
         m = Message()
         m.conversation = node.getChild("body").getData()
         # Whatsapp encoding needs a terminal 1 byte
-        return m.SerializeToString() + '\01'
+        if sys.version_info >= (3, 0):
+            return m.SerializeToString() + bytes('\01', 'latin-1')
+        else:
+            return m.SerializeToString() + '\01'
 
     def serializeMediaToProtobuf(self, mediaNode):
         if mediaNode["type"] == "image":

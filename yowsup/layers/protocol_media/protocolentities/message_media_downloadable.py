@@ -11,6 +11,10 @@ from axolotl.kdf.hkdfv3 import HKDFv3
 from axolotl.util.byteutil import ByteUtil
 import binascii
 import base64
+import logging
+logger = logging.getLogger(__name__)
+
+
 class DownloadableMediaMessageProtocolEntity(MediaMessageProtocolEntity):
     '''
     <message t="{{TIME_STAMP}}" from="{{CONTACT_JID}}"
@@ -60,7 +64,8 @@ class DownloadableMediaMessageProtocolEntity(MediaMessageProtocolEntity):
         return self.cryptKeys and self.mediaKey
 
     def getMediaContent(self):
-        data = urlopen(self.url).read()
+        logger.debug('Getting media data from {}'.format(self.url))
+        data = urlopen(str(self.url)).read()
         if self.isEncrypted():
             data = self.decrypt(data, self.mediaKey)
         return bytearray(data)
@@ -80,7 +85,12 @@ class DownloadableMediaMessageProtocolEntity(MediaMessageProtocolEntity):
     def setDownloadableMediaProps(self, mimeType, fileHash, url, ip, size, fileName, mediaKey):
         self.mimeType   = mimeType
         self.fileHash   = fileHash
-        self.url        = url
+        # The following is to handle incoming and outgoing images
+        # with python 3, since the url for the latter is a str
+        if isinstance(url, str):
+            self.url = url
+        else:
+            self.url = url.decode('latin-1')
         self.ip         = ip
         self.size       = int(size)
         self.fileName   = fileName
