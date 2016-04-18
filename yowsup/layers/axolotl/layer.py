@@ -248,7 +248,7 @@ class YowAxolotlLayer(YowProtocolLayer):
             # logger.error("Invalid message from %s!! Your axololtl database data might be inconsistent with WhatsApp, or with what that contact has" % node["from"])
             # sys.exit(1)
             logger.error(e)
-            retry = RetryOutgoingReceiptProtocolEntity.fromMesageNode(node)
+            retry = RetryOutgoingReceiptProtocolEntity.fromMessageNode(node)
             retry.setRegData(self.store.getLocalRegistrationId())
             self.toLower(retry.toProtocolTreeNode())
             # We still notify the outer application
@@ -256,7 +256,7 @@ class YowAxolotlLayer(YowProtocolLayer):
             # sys.exit(1))
         except InvalidKeyIdException as e:
             logger.error(e)
-            retry = RetryOutgoingReceiptProtocolEntity.fromMesageNode(node)
+            retry = RetryOutgoingReceiptProtocolEntity.fromMessageNode(node)
             retry.setRegData(self.store.getLocalRegistrationId())
             self.toLower(retry.toProtocolTreeNode())
 #>>>>>>> 97cb239... Added exception for invalid session exception with info about sender
