@@ -1,23 +1,30 @@
+import binascii
+import copy
+import sys
+import os
+import logging
+
 from yowsup.layers import YowProtocolLayer, YowLayerEvent, EventCallback
+from .protocolentities import SetKeysIqProtocolEntity
+from axolotl.util.keyhelper import KeyHelper
+from .store import get_store_from_url
+from .store.sqlite.liteaxolotlstore import LiteAxolotlStore
+from axolotl.sessionbuilder import SessionBuilder
 from yowsup.layers.protocol_receipts.protocolentities import OutgoingReceiptProtocolEntity
 from yowsup.layers.network.layer import YowNetworkLayer
 from yowsup.layers.auth.layer_authentication import YowAuthenticationProtocolLayer
 from yowsup.layers.protocol_acks.protocolentities import OutgoingAckProtocolEntity
 from yowsup.layers.protocol_messages.protocolentities import *
 from yowsup.layers.protocol_messages.proto.wa_pb2 import *
-from yowsup.layers.axolotl.store.sqlite.liteaxolotlstore import LiteAxolotlStore
 from yowsup.layers.axolotl.protocolentities.noprekeyrecord import NoPrekeyRecordException
 from yowsup.layers.axolotl.protocolentities import *
 from yowsup.structs import ProtocolTreeNode
 from yowsup.common.tools import StorageTools
 from yowsup.common import YowConstants
 
-from axolotl.sessionbuilder import SessionBuilder
-from axolotl.util.keyhelper import KeyHelper
 from axolotl.ecc.curve import Curve
 from axolotl.protocol.prekeywhispermessage import PreKeyWhisperMessage
 from axolotl.protocol.whispermessage import WhisperMessage
-from axolotl.protocol.senderkeymessage import SenderKeyMessage
 from axolotl.sessioncipher import SessionCipher
 from axolotl.groups.groupcipher import GroupCipher
 from axolotl.util.hexutil import HexUtil
@@ -26,23 +33,16 @@ from axolotl.duplicatemessagexception import DuplicateMessageException
 from axolotl.invalidkeyidexception import InvalidKeyIdException
 from axolotl.nosessionexception import NoSessionException
 from axolotl.untrustedidentityexception import UntrustedIdentityException
-#<<<<<<< HEAD
 from axolotl.axolotladdress import AxolotlAddress
 from axolotl.groups.senderkeyname import SenderKeyName
 from axolotl.groups.groupsessionbuilder import GroupSessionBuilder
 from axolotl.protocol.senderkeydistributionmessage import SenderKeyDistributionMessage
 
-#=======
 from .protocolentities.receipt_outgoing_retry import RetryOutgoingReceiptProtocolEntity
 from .invalidmessagesessionexception import InvalidMessageSessionException
-from yowsup.common import YowConstants
-#>>>>>>> 97cb239... Added exception for invalid session exception with info about sender
-import binascii
-import copy
-import sys
-import logging
 
 logger = logging.getLogger(__name__)
+
 
 class YowAxolotlLayer(YowProtocolLayer):
     EVENT_PREKEYS_SET = "org.openwhatsapp.yowsup.events.axololt.setkeys"
@@ -71,13 +71,14 @@ class YowAxolotlLayer(YowProtocolLayer):
     @property
     def store(self):
         if self._store is None:
-            self.store = LiteAxolotlStore(
-                StorageTools.constructPath(
-                    self.getProp(
-                        YowAuthenticationProtocolLayer.PROP_CREDENTIALS)[0],
-                    self.__class__._DB
-                )
-            )
+            username = self.getProp(
+                YowAuthenticationProtocolLayer.PROP_CREDENTIALS)[0]
+            store_url = os.environ.get('YOWSUP_DATABASE_URL')
+            if store_url:
+                self.store = get_store_from_url(store_url, username)
+            else:
+                self.store = LiteAxolotlStore(
+                    StorageTools.constructPath(username, self._DB))
             self.state = self.__class__._STATE_HASKEYS if  self.store.getLocalRegistrationId() is not None \
                 else self.__class__._STATE_INIT
 
