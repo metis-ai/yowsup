@@ -323,7 +323,10 @@ class YowAxolotlLayer(YowProtocolLayer):
         sessionCipher = self.getSessionCipher(pkMessageProtocolEntity.getAuthor(False))
         plaintext = sessionCipher.decryptPkmsg(preKeyWhisperMessage)
         if enc.getVersion() == 2:
-            padding = ord(plaintext[-1]) & 0xFF
+            try:
+                padding = ord(plaintext[-1]) & 0xFF
+            except:
+                padding = plaintext[-1] & 0xFF
             self.parseAndHandleMessageProto(pkMessageProtocolEntity, plaintext[:-padding])
         else:
             self.handleConversationMessage(node, plaintext)
@@ -337,7 +340,10 @@ class YowAxolotlLayer(YowProtocolLayer):
         plaintext = sessionCipher.decryptMsg(whisperMessage)
 
         if enc.getVersion() == 2:
-            padding = ord(plaintext[-1]) & 0xFF
+            try:
+                padding = ord(plaintext[-1]) & 0xFF
+            except:
+                padding = plaintext[-1] & 0xFF
             logger.debug(
                 'Handleing whisper message (with padding): {}'.format(
                     plaintext))
@@ -353,7 +359,10 @@ class YowAxolotlLayer(YowProtocolLayer):
         groupCipher = GroupCipher(self.store, senderKeyName)
         try:
             plaintext = groupCipher.decrypt(enc.getData())
-            padding = ord(plaintext[-1]) & 0xFF
+            try:
+                padding = ord(plaintext[-1]) & 0xFF
+            except:
+                padding = plaintext[-1] & 0xFF
             self.parseAndHandleMessageProto(encMessageProtocolEntity, plaintext[:-padding])
         except NoSessionException as e:
             logger.error(e)
@@ -366,8 +375,8 @@ class YowAxolotlLayer(YowProtocolLayer):
         try:
             logger.debug('Handleing message (without padding): {}'.format(
                     serializedData))
-            if sys.version_info >= (3, 0):
-                m.ParseFromString(bytes(serializedData, 'latin-1'))
+            if sys.version_info >= (3, 0) and type(serializedData) == str:
+                m.ParseFromString(bytes(serializedData, 'utf-8'))
             else:
                 m.ParseFromString(serializedData)
                 
