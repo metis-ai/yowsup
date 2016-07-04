@@ -19,6 +19,8 @@ from axolotl.axolotladdress import AxolotlAddress
 from axolotl.groups.senderkeyname import SenderKeyName
 from axolotl.groups.groupsessionbuilder import GroupSessionBuilder
 from axolotl.protocol.senderkeydistributionmessage import SenderKeyDistributionMessage
+from .invalidmessagesessionexception import (InvalidMessageSessionException,
+    InvalidMessageMediaException)
 
 import logging
 import copy
@@ -116,6 +118,10 @@ class AxolotlReceivelayer(AxolotlBaseLayer):
                 return self.handleEncMessage(node)
             else:
                 logger.error("Ignoring message with untrusted identity")
+
+        except ValueError as e:
+            self.toLower(OutgoingReceiptProtocolEntity(node["id"], node["from"], participant=node["participant"]).toProtocolTreeNode())
+            raise InvalidMessageMediaException(e, node["from"], node["notify"])
 
     def handlePreKeyWhisperMessage(self, node):
         pkMessageProtocolEntity = EncryptedMessageProtocolEntity.fromProtocolTreeNode(node)

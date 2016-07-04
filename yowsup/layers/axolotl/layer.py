@@ -39,7 +39,8 @@ from axolotl.groups.groupsessionbuilder import GroupSessionBuilder
 from axolotl.protocol.senderkeydistributionmessage import SenderKeyDistributionMessage
 
 from .protocolentities.receipt_outgoing_retry import RetryOutgoingReceiptProtocolEntity
-from .invalidmessagesessionexception import InvalidMessageSessionException
+from .invalidmessagesessionexception import (InvalidMessageSessionException,
+    InvalidMessageMediaException)
 
 logger = logging.getLogger(__name__)
 
@@ -260,6 +261,12 @@ class YowAxolotlLayer(YowProtocolLayer):
             retry = RetryOutgoingReceiptProtocolEntity.fromMessageNode(node)
             retry.setRegData(self.store.getLocalRegistrationId())
             self.toLower(retry.toProtocolTreeNode())
+        except ValueError as e:
+            logger.error(e)
+            retry = RetryOutgoingReceiptProtocolEntity.fromMessageNode(node)
+            retry.setRegData(self.store.getLocalRegistrationId())
+            self.toLower(retry.toProtocolTreeNode())
+            raise InvalidMessageMediaException(e, node["from"], node["notify"])
 #>>>>>>> 97cb239... Added exception for invalid session exception with info about sender
         except NoSessionException as e:
             logger.error(e)
