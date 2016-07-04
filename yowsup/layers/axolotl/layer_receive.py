@@ -167,14 +167,10 @@ class AxolotlReceivelayer(AxolotlBaseLayer):
         node = encMessageProtocolEntity.toProtocolTreeNode()
         m = Message()
         handled = False
-        try:
+        if sys.version_info >= (3, 0) and type(serializedData) == str:
+            m.ParseFromString(serializedData.encode('utf-8'))
+        else:
             m.ParseFromString(serializedData)
-        except:
-            print("DUMP:")
-            print(serializedData)
-            print([s for s in serializedData])
-            print([ord(s) for s in serializedData])
-            raise
         if not m or not serializedData:
             raise ValueError("Empty message")
 
