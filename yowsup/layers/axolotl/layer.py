@@ -376,7 +376,7 @@ class YowAxolotlLayer(YowProtocolLayer):
             logger.debug('Handleing message (without padding): {}'.format(
                     serializedData))
             if sys.version_info >= (3, 0) and type(serializedData) == str:
-                m.ParseFromString(bytes(serializedData, 'utf-8'))
+                m.ParseFromString(bytes(serializedData, 'latin-1'))
             else:
                 m.ParseFromString(serializedData)
                 
